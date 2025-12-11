@@ -1,0 +1,43 @@
+#!/bin/sh
+set -e
+
+PKG="lma"
+# The uninstaller is placed here
+UNINSTALL_SCRIPT="/usr/lib/$PKG/lma-uninstall.sh" 
+LIB_DIR="/usr/lib/$PKG"
+
+case "$1" in
+    # This block now handles BOTH 'remove' and 'purge'
+    remove|purge)
+        echo "[$PKG] Package files removed. Running custom uninstall script for cleanup..."
+
+        # 1. Execute the custom uninstallation script
+        if [ -x "$UNINSTALL_SCRIPT" ]; then
+            # Your custom script runs here regardless of 'remove' or 'purge'
+            "$UNINSTALL_SCRIPT"
+            echo "[$PKG] Custom uninstall script finished."
+        else
+            echo "[$PKG] Warning: Custom uninstall script not found or not executable. No custom cleanup performed." >&2
+        fi
+        
+        # 2. Directory Cleanup (The key change here)
+        # This action now runs on BOTH 'remove' and 'purge' to satisfy the requirement
+        echo "[$PKG] Removing internal library directory: $LIB_DIR"
+        
+        # We use rm -rf as a safety measure to remove the directory and any lingering files
+        # that might not have been tracked by dpkg but were placed there by your program.
+        rm -rf "$LIB_DIR" || true 
+    ;;
+
+    # ... (Other actions remain the same) ...
+    upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+        # Do nothing on these actions
+    ;;
+
+    *)
+        echo "[$PKG] postrm called with unknown argument '$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0

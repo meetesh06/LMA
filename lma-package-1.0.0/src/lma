@@ -1,0 +1,35 @@
+#!/bin/bash
+
+SCRIPT_NAME=$(basename "$0")
+LOCK_FILE="/var/run/${SCRIPT_NAME}.lock"
+
+if exec 9> "$LOCK_FILE"; then
+    if flock -n -x 9; then
+        INVOKING_USER_UID=${SUDO_UID:-$(id -u "$LOGNAME" 2>/dev/null)}
+        INVOKING_USER_NAME=${SUDO_USER:-$(logname 2>/dev/null)}
+
+        if [ -z "$INVOKING_USER_UID" ] || [ "$INVOKING_USER_UID" -eq 0 ]; then
+             INVOKING_USER_UID=$(id -u)
+             INVOKING_USER_NAME=$(whoami)
+             echo "ERROR: Could not determine user, found $INVOKING_USER_UID."
+             exit 1
+        fi
+
+        echo "LMA Start."
+        echo "   * Invoking User Name: **$INVOKING_USER_NAME**"
+        echo "   * Invoking User UID: **$INVOKING_USER_UID**"
+
+        trap ':' INT
+
+        /usr/bin/python3 /usr/lib/lma/lma.py $INVOKING_USER_UID || true
+
+        exit 0
+    else
+        # Lock acquisition failed (Another instance is running).
+        echo "Another instance of LMA is currently running. Access is locked. Exiting."
+        exit 1
+    fi
+else
+    echo "ERROR: Could not open or create the lock file ($LOCK_FILE). Check system permissions."
+    exit 2
+fi

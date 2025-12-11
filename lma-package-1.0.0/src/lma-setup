@@ -1,0 +1,21 @@
+#!/bin/bash
+
+SCRIPT_NAME=$(basename "$0")
+LOCK_FILE="/var/run/${SCRIPT_NAME}.lock"
+
+if exec 9> "$LOCK_FILE"; then
+    if flock -n -x 9; then
+        echo "LMA Setup Start"
+        trap ':' INT
+
+        /usr/bin/python3 /usr/lib/lma/setup.py $1 || true
+
+        exit 0
+    else
+        echo "Another instance of LMA is currently running. Access is locked. Exiting."
+        exit 1
+    fi
+else
+    echo "ERROR: Could not open or create the lock file ($LOCK_FILE). Check system permissions."
+    exit 2
+fi

@@ -1,0 +1,15 @@
+{
+  "cpu": {
+    "total": "0-255",
+    "shared": "0-63",
+    "isolated": "64-255"
+  },
+  "coreGroupSizes": [
+    8,
+    16,
+    32,
+    64
+  ],
+  "setIRQAffinityToShared": true,
+  "addLMAGroupToSudoers": true
+}

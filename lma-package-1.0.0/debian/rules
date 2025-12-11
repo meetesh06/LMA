@@ -1,0 +1,17 @@
+#!/usr/bin/make -f
+# Use the debhelper tools
+%:
+	dh $@
+
+# This rule overrides the default installation step (dh_install).
+override_dh_install:
+	# 1. Install primary binaries to /usr/sbin/ (Administrative tools)
+	dh_install src/lma /usr/sbin/
+	dh_install src/lma-setup /usr/sbin/
+
+	# 2. Install ALL internal files (helpers + uninstaller) to /usr/lib/lma/
+	dh_install src/lib/lma-aHook.sh /usr/lib/lma/
+	dh_install src/lib/lma-dHook.sh /usr/lib/lma/
+	dh_install src/lib/lma-uninstall.sh /usr/lib/lma/
+	dh_install src/lib/lma.py /usr/lib/lma/
+	dh_install src/lib/setup.py /usr/lib/lma/

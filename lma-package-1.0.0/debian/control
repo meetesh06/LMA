@@ -1,0 +1,17 @@
+Source: lma
+Section: admin
+Priority: optional
+Maintainer: Meetesh K Mehta <meeteshmehta@cse.iitb.ac.in>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.0
+Homepage: https://meetesh06.github.io
+
+Package: lma
+Architecture: all
+Depends: 
+    ${misc:Depends},
+    python3
+Description: Leave Me Alone (LMA) - A simple utility for core isolation in cgroup v2.
+ LMA is a command-line utility designed to easily manage CPU core isolation 
+ using the cgroup v2 mechanism. It helps dedicated high-priority processes 
+ by confining other processes to specific sets of CPU cores, minimizing noise.
