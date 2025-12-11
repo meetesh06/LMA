@@ -1,4 +1,4 @@
-lma (1.0-1) unstable; urgency=medium
+lma (1.0.0) unstable; urgency=medium
 
   * Initial release of Leave Me Alone (LMA).
   * Packaging created for core isolation utility using cgroups v2.
