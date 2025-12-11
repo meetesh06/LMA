@@ -10,15 +10,8 @@ case "$1" in
     # This block now handles BOTH 'remove' and 'purge'
     remove|purge)
         echo "[$PKG] Package files removed. Running custom uninstall script for cleanup..."
-
         # 1. Execute the custom uninstallation script
-        if [ -x "$UNINSTALL_SCRIPT" ]; then
-            # Your custom script runs here regardless of 'remove' or 'purge'
-            "$UNINSTALL_SCRIPT"
-            echo "[$PKG] Custom uninstall script finished."
-        else
-            echo "[$PKG] Warning: Custom uninstall script not found or not executable. No custom cleanup performed." >&2
-        fi
+        bash "$UNINSTALL_SCRIPT"
         
         # 2. Directory Cleanup (The key change here)
         # This action now runs on BOTH 'remove' and 'purge' to satisfy the requirement

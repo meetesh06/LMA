@@ -16,7 +16,7 @@ echo "Removing dynamic user slice reservations..."
 find "$SLICE_DIR" -maxdepth 1 -type d \
     -name 'user-*.slice.d' \
     ! -name 'user-.slice.d' \
-    -exec bash -c 'echo "deleting {}" && rm {}/*' \;
+    -exec bash -c 'echo "deleting {}" && rm -f {}/*' \;
 
 # --- 3. Other Configuration Cleanup ---
 
@@ -34,4 +34,5 @@ rm -f /etc/systemd/system/lma-reset.service
 echo "Reloading systemd daemon and restarting slices..."
 systemctl daemon-reload || true
 systemctl restart user.slice || true
-systemctl restart system.slice || true
+
+update-grub

@@ -1,0 +1,33 @@
+#!/bin/sh
+set -e
+
+# $1 is the action argument: configure, abort-install, abort-upgrade, etc.
+# We only want to run the setup notice when the package is first configured.
+case "$1" in
+    configure)
+        echo ""
+        echo "========================================================================="
+        echo "=== LMA (Leave Me Alone) Post-Installation Setup ===="
+        echo "========================================================================="
+        echo ""
+        echo "  Your core isolation utility has been installed to /usr/sbin/."
+        echo "  To finalize the setup and configure cgroup slices and systemd hooks,"
+        echo "  you must run the dedicated setup script as root:"
+        echo ""
+        echo "      sudo lma-setup <CONFIG_FILE>"
+        echo ""
+        echo "  Please run this command immediately before using LMA."
+        echo ""
+        echo ""
+        echo " Contact: Meetesh K Mehta <meeteshmehta@cse.iitb.ac.in> "
+        echo "========================================================================="
+        echo ""
+    ;;
+
+    # Actions like abort-install, abort-upgrade, and others do not require a message
+    *)
+        # Do nothing
+    ;;
+esac
+
+exit 0

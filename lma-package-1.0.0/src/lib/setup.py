@@ -123,8 +123,7 @@ CPUAffinity={LMA_DATA["cpu"]["shared"][0]}-{LMA_DATA["cpu"]["shared"][1]}
 
 
 def doMakeResetUserCoreAllocationScript():
-    resetCoreAllocation = """
-#!/bin/bash
+    resetCoreAllocation = """#!/bin/bash
 
 SLICE_DIR="/etc/systemd/system/" 
 
@@ -140,8 +139,6 @@ find "$SLICE_DIR" -maxdepth 1 -type d \
 # Reload the daemon
 systemctl daemon-reload
 systemctl restart user.slice
-systemctl restart system.slice
-systemctl restart init.scope.d
 exit 0
     """
 
@@ -255,9 +252,16 @@ def init(jsonPath: Path):
         subprocess.run(['sudo', 'systemctl', 'daemon-reload'], check=True)
         subprocess.run(['sudo', 'systemctl', 'enable', 'lma-reset.service'], check=True)
         subprocess.run(['sudo', 'systemctl', 'start', 'lma-reset.service'], check=True)
+
+        subprocess.run(['sudo', 'chmod', '+x', RESET_CORE_ALLOC_SCRIPT_PATH], check=True)
+
+        if LMA_DATA["setIRQAffinityToShared"]:
+            subprocess.run(['sudo', 'update-grub'], check=True)
         
-        if os.path.exists(DATABASE_FILE):
-            subprocess.run(["sudo", "rm", DATABASE_FILE], check=True)
+        if LMA_DATA["addLMAGroupToSudoers"]:
+            subprocess.run(["sudo", "groupadd", "-f", "lma"], check=True)
+
+        subprocess.run(["sudo", "rm", "-f", DATABASE_FILE], check=True)    
 
         with open(LMA_DATA_PATH, "w") as f:
             json.dump(LMA_DATA, f, indent=4)
