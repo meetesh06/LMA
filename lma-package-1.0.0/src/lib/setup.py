@@ -249,11 +249,12 @@ def init(jsonPath: Path):
         addLmaSudoRule()
 
     try:
+        subprocess.run(['sudo', 'chmod', '+x', RESET_CORE_ALLOC_SCRIPT_PATH], check=True)
+
         subprocess.run(['sudo', 'systemctl', 'daemon-reload'], check=True)
         subprocess.run(['sudo', 'systemctl', 'enable', 'lma-reset.service'], check=True)
         subprocess.run(['sudo', 'systemctl', 'start', 'lma-reset.service'], check=True)
 
-        subprocess.run(['sudo', 'chmod', '+x', RESET_CORE_ALLOC_SCRIPT_PATH], check=True)
 
         if LMA_DATA["setIRQAffinityToShared"]:
             subprocess.run(['sudo', 'update-grub'], check=True)
