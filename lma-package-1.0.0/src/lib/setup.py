@@ -27,6 +27,7 @@ LMA_DATA = {
 
 SLICE_DIR = "/etc/systemd/system/"
 SUDOERS_DIR = "/etc/sudoers.d"
+LMA_PATH="/usr/sbin/lma"
 
 DATABASE_FILE = "/usr/lib/lma/lmaAllocations.csv"
 LMA_DATA_PATH = "/usr/lib/lma/lmaData"
@@ -176,7 +177,7 @@ GRUB_CMDLINE_LINUX_DEFAULT="$GRUB_CMDLINE_LINUX_DEFAULT irqaffinity={LMA_DATA["c
 def addLmaSudoRule():
     sudoers_dir = SUDOERS_DIR
     rule_file = SUDOERS_RULE
-    rule_content = "%lma ALL=(root) NOPASSWD: /usr/local/bin/lma\n"
+    rule_content = f"%lma ALL=(root) NOPASSWD: {LMA_PATH}\n"
 
     # Ensure directory exists (it always should, but we check)
     if not os.path.isdir(sudoers_dir):
