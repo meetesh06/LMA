@@ -3,22 +3,50 @@ set -e
 
 PKG="lma"
 # The uninstaller is placed here
-UNINSTALL_SCRIPT="/usr/lib/$PKG/lma-uninstall.sh" 
 LIB_DIR="/usr/lib/$PKG"
 
 case "$1" in
     # This block now handles BOTH 'remove' and 'purge'
     remove|purge)
         echo "[$PKG] Package files removed. Running custom uninstall script for cleanup..."
-        # 1. Execute the custom uninstallation script
-        bash "$UNINSTALL_SCRIPT"
+
+        echo "Cleaning up cgroup slice overrides..."
+        rm -f /etc/systemd/system/init.scope.d/40-cpulimit.conf
+        rm -f /etc/systemd/system/system.slice.d/40-cpulimit.conf
+        rm -f /etc/systemd/system/user.slice.d/40-cpulimit.conf
+        rm -f /etc/systemd/system/user-.slice.d/40-cpulimit.conf
+
+        # --- 2. Remove all dynamic user slice reservations ---
+
+        SLICE_DIR="/etc/systemd/system/" 
+        echo "Removing dynamic user slice reservations..."
+
+        find "$SLICE_DIR" -maxdepth 1 -type d \
+            -name 'user-*.slice.d' \
+            ! -name 'user-.slice.d' \
+            -exec bash -c 'echo "deleting {}" && rm -f {}/*' \;
+
+        # --- 3. Other Configuration Cleanup ---
+
+        echo "Cleaning up GRUB configuration..."
+        rm -f /etc/default/grub.d/cgroup.cfg
+
+        echo "Removing sudoers directive..."
+        rm -f /etc/sudoers.d/lma
+
+        echo "Removing systemd service file..."
+        rm -f /etc/systemd/system/lma-reset.service
+
+        # --- 4. Reload Daemon and Restart Services ---
+
+        echo "Reloading systemd daemon and restarting slices..."
+        systemctl daemon-reload || true
+        systemctl restart user.slice || true
+
+        update-grub
         
-        # 2. Directory Cleanup (The key change here)
-        # This action now runs on BOTH 'remove' and 'purge' to satisfy the requirement
+        # --- 5. Cleanup extra files ---
         echo "[$PKG] Removing internal library directory: $LIB_DIR"
-        
-        # We use rm -rf as a safety measure to remove the directory and any lingering files
-        # that might not have been tracked by dpkg but were placed there by your program.
         rm -rf "$LIB_DIR" || true 
     ;;
 
