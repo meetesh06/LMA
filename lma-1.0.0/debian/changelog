@@ -1,6 +1,14 @@
+lma (1.0.0-0ubuntu1) jammy; urgency=medium
+
+  * Re-upload for Launchpad PPA: Incremented Debian revision and confirmed
+    target distribution as 'jammy'.
+  * Initial release of Leave Me Alone (LMA).
+  * Packaging created for core isolation utility using cgroups v2.
+
+ -- Meetesh K Mehta <meeteshmehta4@gmail.com>  Fri, 12 Dec 2025 13:08:35 +0530
+
 lma (1.0.0) unstable; urgency=medium
 
   * Initial release of Leave Me Alone (LMA).
   * Packaging created for core isolation utility using cgroups v2.
-
  -- Meetesh K Mehta <meeteshmehta4@gmail.com>  Fri, 12 Dec 2025 12:56:59 +0530
