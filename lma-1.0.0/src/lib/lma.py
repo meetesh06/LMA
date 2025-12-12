@@ -147,7 +147,6 @@ def run_deallocation_hook(user_id: int, start: int, end: int, size: int):
         result = subprocess.run(command, check=True, capture_output=True, text=True)
         print("\n[Deallocation Hook Output]")
         print(result.stdout.strip())
-        exit(1)
     except FileNotFoundError:
         print(f"\n[Hook Error] Deallocation script not found at {DEALLOCATION_SCRIPT_PATH}. Skipping hook.")
         exit(1)
