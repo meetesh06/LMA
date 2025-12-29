@@ -1,3 +1,9 @@
+lma (1.0.3-0ubuntu1) jammy; urgency=medium
+
+  * Fix executable permissions, I am still learning sorry
+
+ -- Meetesh K Mehta <meeteshmehta4@gmail.com>  Mon, 29 Dec 2025 17:58:20 +0000
+
 lma (1.0.2-0ubuntu1) jammy; urgency=medium
 
   * Bugfix, cleanup service.
