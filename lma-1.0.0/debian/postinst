@@ -16,10 +16,10 @@ case "$1" in
         echo ""
         echo "      sudo lma-setup <CONFIG_FILE>"
         echo ""
-        echo "  Please run this command immediately before using LMA."
+        echo "  Please run this command immediately after installing LMA."
         echo ""
         echo ""
-        echo " Contact: Meetesh K Mehta <meeteshmehta@cse.iitb.ac.in> "
+        echo " Author: Meetesh K Mehta <meeteshmehta@cse.iitb.ac.in | meeteshmehta4@gmail.com> "
         echo "========================================================================="
         echo ""
     ;;
