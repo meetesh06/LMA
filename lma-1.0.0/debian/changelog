@@ -1,3 +1,9 @@
+lma (1.0.1-0ubuntu1) jammy; urgency=medium
+
+  * Bugfix deallocation hook early exit. 
+
+ -- Meetesh K Mehta <meeteshmehta4@gmail.com>  Mon, 15 Dec 2025 12:00:00 +0000
+
 lma (1.0.0-0ubuntu1) jammy; urgency=medium
 
   * Re-upload for Launchpad PPA: Incremented Debian revision and confirmed

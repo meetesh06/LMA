@@ -129,13 +129,13 @@ def doMakeResetUserCoreAllocationScript():
 SLICE_DIR="/etc/systemd/system/" 
 
 # Reset core allocations
-rm -f {DATABASE_FILE}
+rm /opt/lmaAllocations.csv
 
 # Remove all user reservations
 find "$SLICE_DIR" -maxdepth 1 -type d \
     -name 'user-*.slice.d' \
     ! -name 'user-.slice.d' \
-    -exec bash -c 'echo "deleting {}" && rm -f {}/*' \;
+    -exec bash -c 'echo "deleting {}" && rm {}/*' \;
 
 # Reload the daemon
 systemctl daemon-reload
@@ -150,12 +150,14 @@ def doMakeResetUserCoreAllocationService():
     resetCoreAllocationService = f"""
 [Unit]
 Description=LMA cleanup user slices
-After=multi-user.target
+After=local-fs.target
+Before=basic.target multi-user.target
 
 [Service]
 Type=oneshot
+User=root
 ExecStart={RESET_CORE_ALLOC_SCRIPT_PATH}
-RemainAfterExit=yes
+StandardOutput=journal
 
 [Install]
 WantedBy=multi-user.target
