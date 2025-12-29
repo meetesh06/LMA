@@ -33,6 +33,10 @@ LMA_PATH="/usr/sbin/lma"
 DATABASE_FILE = "/usr/lib/lma/lmaAllocations.csv"
 LMA_DATA_PATH = "/usr/lib/lma/lmaData"
 RESET_CORE_ALLOC_SCRIPT_PATH = "/usr/lib/lma/lma-reset.sh"
+
+AHOOK_SCRIPT_PATH = "/usr/lib/lma/lma-aHook.sh"
+DHOOK_SCRIPT_PATH = "/usr/lib/lma/lma-dHook.sh"
+
 RESET_CORE_ALLOC_SERVICE_PATH = "/etc/systemd/system/lma-reset.service"
 GRUB_IRQ_PATH = "/etc/default/grub.d/cgroup.cfg"
 SUDOERS_RULE = "/etc/sudoers.d/lma"
@@ -249,6 +253,8 @@ def init(jsonPath: Path):
 
     try:
         subprocess.run(['sudo', 'chmod', '+x', RESET_CORE_ALLOC_SCRIPT_PATH], check=True)
+        subprocess.run(['sudo', 'chmod', '+x', AHOOK_SCRIPT_PATH], check=True)
+        subprocess.run(['sudo', 'chmod', '+x', DHOOK_SCRIPT_PATH], check=True)
 
         subprocess.run(['sudo', 'systemctl', 'daemon-reload'], check=True)
         subprocess.run(['sudo', 'systemctl', 'enable', 'lma-reset.service'], check=True)

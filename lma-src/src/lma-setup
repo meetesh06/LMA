@@ -8,7 +8,7 @@ if exec 9> "$LOCK_FILE"; then
         echo "LMA Setup Start"
         trap ':' INT
 
-        /usr/lib/lma/setup.py $1 || true
+        /usr/bin/python3 /usr/lib/lma/setup.py $1 || true
 
         exit 0
     else
