@@ -21,7 +21,7 @@ if exec 9> "$LOCK_FILE"; then
 
         trap ':' INT
 
-        /usr/bin/python3 /usr/lib/lma/lma.py $INVOKING_USER_UID || true
+        /usr/lib/lma/lma.py $INVOKING_USER_UID || true
 
         exit 0
     else
