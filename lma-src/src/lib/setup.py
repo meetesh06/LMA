@@ -129,7 +129,7 @@ CPUAffinity={LMA_DATA["cpu"]["shared"][0]}-{LMA_DATA["cpu"]["shared"][1]}
 
 
 def doMakeResetUserCoreAllocationScript():
-    resetCoreAllocation = """#!/bin/bash
+    resetCoreAllocation = f"""#!/bin/bash
 
 SLICE_DIR="/etc/systemd/system/" 
 
@@ -140,7 +140,7 @@ rm -f {DATABASE_FILE}
 find "$SLICE_DIR" -maxdepth 1 -type d \
     -name 'user-*.slice.d' \
     ! -name 'user-.slice.d' \
-    -exec bash -c 'echo "deleting {}" && rm -f {}/*' \;
+    -exec bash -c 'echo "deleting {{}}" && rm -f {{}}/*' \;
 
 # Reload the daemon
 systemctl daemon-reload
