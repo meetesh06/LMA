@@ -1,17 +1,23 @@
 #!/bin/bash
+# LMA deallocation hook.
+# Usage: lma-dHook.sh <uid> <cpulist> <ncpus> <socket> [<numa-nodes>|none]
+set -euo pipefail
+
 USER_ID=$1
-START_CORE=$2
-END_CORE=$3
-SIZE=$4
+CPUS=$2
+NCPUS=$3
+SOCKET=$4
+MEMS=${5:-none}
+
+[[ "$USER_ID" =~ ^[0-9]+$ ]] || { echo "invalid uid: $USER_ID" >&2; exit 1; }
 
 echo "--- LMA deallocation hook ---"
-echo "🗑️ Core block DEALLOCATED."
 echo "User ID: ${USER_ID}"
-echo "Core ID Range: ${START_CORE} to ${END_CORE}"
-echo "Number of Cores: ${SIZE}"
+echo "CPUs: ${CPUS} (${NCPUS} CPUs, socket ${SOCKET}), memory nodes: ${MEMS}"
 
-rm "/etc/systemd/system/user-$USER_ID.slice.d/90-AllowedCPUs.conf"
+# -f: a missing drop-in must not leave the user stuck with a phantom allocation.
+rm -f "/etc/systemd/system/user-${USER_ID}.slice.d/90-AllowedCPUs.conf"
 systemctl daemon-reload
-systemctl restart user-$USER_ID.slice
+systemctl restart "user-${USER_ID}.slice"
 
 echo "--- Hook End ---"

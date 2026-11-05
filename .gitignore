@@ -1,1 +1,11 @@
 notes
+# Debian build output (./clean.sh removes it)
+/lma_*
+lma-src/debian/lma/
+lma-src/debian/.debhelper/
+lma-src/debian/files
+lma-src/debian/debhelper-build-stamp
+lma-src/debian/*.substvars
+lma-src/debian/*.debhelper.log
+lma-src/debian/*.debhelper
+__pycache__/

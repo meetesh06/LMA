@@ -1,24 +1,43 @@
 #!/bin/bash
+# LMA allocation hook.
+# Usage: lma-aHook.sh <uid> <cpulist> <ncpus> <socket> [<numa-nodes>|none]
+set -euo pipefail
+
 USER_ID=$1
-START_ADDR=$2
-END_ADDR=$3
-SIZE=$4
+CPUS=$2
+NCPUS=$3
+SOCKET=$4
+MEMS=${5:-none}
+
+[[ "$USER_ID" =~ ^[0-9]+$ ]] || { echo "invalid uid: $USER_ID" >&2; exit 1; }
+[[ "$CPUS" =~ ^[0-9,-]+$ ]] || { echo "invalid cpulist: $CPUS" >&2; exit 1; }
+[[ "$MEMS" == none || "$MEMS" =~ ^[0-9,-]+$ ]] || { echo "invalid NUMA node list: $MEMS" >&2; exit 1; }
 
 echo "--- LMA allocation hook ---"
 echo "User ID: ${USER_ID}"
-echo "Address Range: ${START_ADDR} to ${END_ADDR}"
-echo "Size: ${SIZE} units"
+echo "CPUs: ${CPUS} (${NCPUS} CPUs, socket ${SOCKET})"
+echo "Memory nodes: ${MEMS}"
 
-mkdir -p /etc/systemd/system/user-$USER_ID.slice.d
-cat << EOF > "/etc/systemd/system/user-$USER_ID.slice.d/90-AllowedCPUs.conf"
+# Strict NUMA binding (cpuset.mems) when requested; empty resets to "all nodes".
+MEM_LINES="AllowedMemoryNodes="
+if [ "$MEMS" != none ]; then
+    MEM_LINES="AllowedMemoryNodes=
+AllowedMemoryNodes=${MEMS}"
+fi
+
+DIR="/etc/systemd/system/user-${USER_ID}.slice.d"
+mkdir -p "$DIR"
+cat << EOF2 > "$DIR/.90-AllowedCPUs.conf.tmp"
 [Unit]
-Description=LMA allocation $START_ADDR-$END_ADDR
+Description=LMA allocation ${CPUS} (socket ${SOCKET})
 
 [Slice]
 AllowedCPUs=
-AllowedCPUs=$START_ADDR-$END_ADDR
-EOF
+AllowedCPUs=${CPUS}
+${MEM_LINES}
+EOF2
+mv -f "$DIR/.90-AllowedCPUs.conf.tmp" "$DIR/90-AllowedCPUs.conf"
 
 systemctl daemon-reload
-systemctl restart user-$USER_ID.slice
+systemctl restart "user-${USER_ID}.slice"
 echo "--- Hook End ---"

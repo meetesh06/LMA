@@ -14,3 +14,4 @@ override_dh_install:
 	dh_install src/lib/lma-dHook.sh /usr/lib/lma/
 	dh_install src/lib/lma.py /usr/lib/lma/
 	dh_install src/lib/setup.py /usr/lib/lma/
+	dh_install src/lib/lmalib.py /usr/lib/lma/

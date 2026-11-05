@@ -21,10 +21,8 @@ case "$1" in
         SLICE_DIR="/etc/systemd/system/" 
         echo "Removing dynamic user slice reservations..."
 
-        find "$SLICE_DIR" -maxdepth 1 -type d \
-            -name 'user-*.slice.d' \
-            ! -name 'user-.slice.d' \
-            -exec bash -c 'echo "deleting {}" && rm -f {}/*' \;
+        # Only remove LMA's own drop-in; other admin drop-ins in user-UID.slice.d are kept.
+        rm -f "$SLICE_DIR"user-*.slice.d/90-AllowedCPUs.conf
 
         # --- 3. Other Configuration Cleanup ---
 
@@ -35,6 +33,7 @@ case "$1" in
         rm -f /etc/sudoers.d/lma
 
         echo "Removing systemd service file..."
+        systemctl disable lma-reset.service 2>/dev/null || true
         rm -f /etc/systemd/system/lma-reset.service
 
         # --- 4. Reload Daemon and Restart Services ---
@@ -43,7 +42,15 @@ case "$1" in
         systemctl daemon-reload || true
         systemctl restart user.slice || true
 
-        update-grub
+        if command -v update-grub >/dev/null 2>&1; then
+            update-grub || true
+        fi
+
+        rm -f /run/lma.lock
+        if [ "$1" = "purge" ]; then
+            echo "Removing /etc/lma ..."
+            rm -rf /etc/lma
+        fi
         
         # --- 5. Cleanup extra files ---
         echo "[$PKG] Removing internal library directory: $LIB_DIR"
