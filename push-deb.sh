@@ -52,14 +52,35 @@ CODE_VERSION=$(sed -n 's/^LMA_VERSION = "\(.*\)".*/\1/p' "$SRC/src/lib/lmalib.py
 
 # --- 3. Signing key ---------------------------------------------------------
 step "Checking GPG key"
-if [ -n "$KEY" ]; then
-  gpg --list-secret-keys "$KEY" >/dev/null 2>&1 || die "no secret key $KEY"
-  echo "using key $KEY"
-else
-  gpg --list-secret-keys "$EMAIL" >/dev/null 2>&1 \
-    || die "no secret GPG key for $EMAIL (the changelog maintainer); pass --key or fix the changelog email"
-  echo "found a key for $EMAIL (it must be registered on your Launchpad account)"
+# debsign looks keys up by the full "Name <email>" from the changelog, which fails when the key's
+# name differs. Resolve a fingerprint here (secret key present, not expired/revoked, can sign) and
+# always pass it explicitly with -k.
+pick_key() {
+  gpg --list-secret-keys --with-colons --fixed-list-mode "$1" 2>/dev/null | awk -F: '
+    $1 == "sec" { ok = ($2 !~ /^[erdi]$/) && ($12 ~ /S/) && ($15 != "#"); want = 1; next }
+    $1 == "fpr" && want { if (ok) { print $10; exit } want = 0 }'
+}
+FPR=$(pick_key "${KEY:-$EMAIL}") || FPR=""   # gpg exits non-zero when nothing matches
+if [ -z "$FPR" ]; then
+  echo "!! No usable signing key for ${KEY:-$EMAIL}. Keys gpg knows for it:" >&2
+  gpg --list-secret-keys --keyid-format long "${KEY:-$EMAIL}" >&2 || true
+  die "need a secret key that can sign (not expired/revoked, not a stub); pass --key KEYID or fix the changelog email"
 fi
+echo "key $FPR"
+gpg --list-keys --with-colons "$FPR" | awk -F: '$1 == "uid" && $2 !~ /^[r]$/ {print "  uid: " $10}'
+gpg --list-keys --with-colons "$FPR" | awk -F: -v m="$MAINT" '$1 == "uid" && $10 == m {f = 1} END {exit !f}' \
+  || echo "  (no uid exactly matches \"$MAINT\"; signing by fingerprint instead)"
+# pinentry needs to know the terminal to ask for the passphrase; without GPG_TTY gpg fails with
+# "Inappropriate ioctl for device". Also point an already-running gpg-agent at this terminal.
+if [ -z "${GPG_TTY:-}" ] && tty -s; then export GPG_TTY=$(tty); fi
+gpg-connect-agent updatestartuptty /bye >/dev/null 2>&1 || true
+# Test-sign now so passphrase/key problems fail before the build. gpg-agent then caches the
+# passphrase, so debsign normally does not ask again.
+echo "test" | gpg --local-user "$FPR" --clearsign --yes -o /dev/null \
+  || die "gpg could not sign with $FPR. If it says 'Inappropriate ioctl for device', run this in an
+   interactive terminal (GPG_TTY=${GPG_TTY:-unset}); otherwise check the passphrase/smartcard/signing subkey."
+echo "signing works (the key must also be registered on your Launchpad account)"
+export DEBEMAIL="$EMAIL" DEBFULLNAME="${MAINT% <*}"
 
 # --- 4. What the PPA already has -------------------------------------------
 step "Asking Launchpad which versions $PPA already has"
@@ -111,15 +132,21 @@ if [ -n "$SAME_UPSTREAM" ]; then
   SOURCE_OPT=-sd     # orig already on Launchpad: upload only the diff
 else
   step "Creating lma_${UPSTREAM}.orig.tar.gz"
-  tar -C "$SRC" --exclude=__pycache__ --owner=0 --group=0 -czf "$ORIG" ./src
-  tar -tzf "$ORIG" | sed 's/^/  /'
+  # dpkg-source strips the tarball's top-level directory, so it must be lma-<version>.orig/
+  # containing src/ (everything except debian/). Modes, incl. executable bits, come from here.
+  STAGE="$TMP/lma-$UPSTREAM.orig"
+  mkdir -p "$STAGE" && cp -a "$SRC/src" "$STAGE/"
+  find "$STAGE" -name __pycache__ -prune -exec rm -rf {} +
+  tar -C "$TMP" --sort=name --owner=0 --group=0 --numeric-owner -czf "$ORIG" "lma-$UPSTREAM.orig"
+  tar -tvzf "$ORIG" | awk '{print "  " $1 "  " $6}'
   SOURCE_OPT=-sa     # new upstream version: include the orig tarball
 fi
 
 step "Building signed source package"
-args=(-S "$SOURCE_OPT")
+# debuild clears the environment; keep what gpg/pinentry need for debsign.
+args=(--preserve-envvar=GPG_TTY --preserve-envvar=GNUPGHOME --preserve-envvar=GPG_AGENT_INFO -S "$SOURCE_OPT")
 [ -n "$SINCE" ] && args+=("-v$SINCE") && echo "including changelog entries after $SINCE"
-[ -n "$KEY" ] && args+=("-k$KEY")
+args+=("-k$FPR")
 (cd "$SRC" && debuild "${args[@]}")
 
 CHANGES="$ROOT/lma_${VERSION}_source.changes"
